@@ -37,14 +37,14 @@ export default {
   },
   methods: {
     setLayout (layout) {
-      if (!layout || !layouts['_' + layout]) layout = 'default'
+      if (!layout || !resolvedLayouts['_' + layout]) layout = 'default'
       this.layoutName = layout
       let _layout = '_' + layout
-      this.layout = layouts[_layout]
+      this.layout = resolvedLayouts[_layout]
       return this.layout
     },
     loadLayout (layout) {
-      if (!layout || !layouts['_' + layout]) layout = 'default'
+      if (!layout || !(layouts['_' + layout] || resolvedLayouts['_' + layout])) layout = 'default'
       let _layout = '_' + layout
       if (typeof layouts[_layout] !== 'function') {
         return Promise.resolve(layouts[_layout])
