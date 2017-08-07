@@ -20,6 +20,8 @@ layoutsKeys.forEach(function (key, i) { %>
 <% }) %>
 }
 
+let resolvedLayouts = {}
+
 export default {
   head: <%= JSON.stringify(head) %>,
   data: () => ({
@@ -46,13 +48,14 @@ export default {
     loadLayout (layout) {
       if (!layout || !(layouts['_' + layout] || resolvedLayouts['_' + layout])) layout = 'default'
       let _layout = '_' + layout
-      if (typeof layouts[_layout] !== 'function') {
-        return Promise.resolve(layouts[_layout])
+      if (resolvedLayouts[_layout]) {
+        return Promise.resolve(resolvedLayouts[_layout])
       }
       return layouts[_layout]()
       .then((Component) => {
-        layouts[_layout] = Component
-        return layouts[_layout]
+        resolvedLayouts[_layout] = Component
+        delete layouts[_layout]
+        return resolvedLayouts[_layout]
       })
       .catch((e) => {
         if (this.$nuxt) {
