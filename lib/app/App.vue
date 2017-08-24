@@ -16,7 +16,7 @@ let layouts = {
 <%
 var layoutsKeys = Object.keys(layouts);
 layoutsKeys.forEach(function (key, i) { %>
-  "_<%= key %>": () => import('<%= layouts[key] %>'  /* webpackChunkName: "layouts/<%= key %>" */).then(m => m.default || m)<%= (i + 1) < layoutsKeys.length ? ',' : '' %>
+  "_<%= key %>": () => import('<%= layouts[key] %>'  /* webpackChunkName: "<%= wChunk('layouts/'+key) %>" */).then(m => m.default || m)<%= (i + 1) < layoutsKeys.length ? ',' : '' %>
 <% }) %>
 }
 
@@ -28,16 +28,36 @@ export default {
     layout: null,
     layoutName: ''
   }),
+  beforeCreate () {
+    Vue.util.defineReactive(this, 'nuxt', this.$options._nuxt)
+  },
+  created () {
+    // Add this.$nuxt in child instances
+    Vue.prototype.$nuxt = this
+    // add to window so we can listen when ready
+    if (typeof window !== 'undefined') {
+      window.$nuxt = this
+    }
+    // Add $nuxt.error()
+    this.error = this.nuxt.error
+  },
   <% if (loading) { %>
   mounted () {
     this.$loading = this.$refs.loading
-    this.$nuxt.$loading = this.$loading
+  },
+  watch: {
+    'nuxt.err': 'errorChanged'
   },
   <% } %>
-  beforeCreate () {
-    Vue.util.defineReactive(this, 'nuxt', this.$root.$options._nuxt)
-  },
   methods: {
+    <% if (loading) { %>
+    errorChanged () {
+      if (this.nuxt.err && this.$loading) {
+        if (this.$loading.fail) this.$loading.fail()
+        if (this.$loading.finish) this.$loading.finish()
+      }
+    },
+    <% } %>
     setLayout (layout) {
       if (!layout || !resolvedLayouts['_' + layout]) layout = 'default'
       this.layoutName = layout
